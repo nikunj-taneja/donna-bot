@@ -1,0 +1,67 @@
+{
+  // Gateway — loopback only, auth required, no public exposure needed
+  // (Telegram uses outbound long polling; no inbound port required)
+  gateway: {
+    mode: "local",
+    port: 18789,
+    bind: "loopback",
+    auth: {
+      mode: "token",
+      token: "${OPENCLAW_GATEWAY_AUTH_TOKEN}",
+    },
+    reload: { mode: "hybrid" },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "/opt/donna/workspace",
+      model: {
+        primary: "google/gemini-3.1-flash-lite",
+      },
+      sandbox: {
+        mode: "non-main",
+        scope: "session",
+        workspaceAccess: "ro",
+      },
+    },
+  },
+
+  channels: {
+    telegram: {
+      enabled: true,
+      botToken: "${TELEGRAM_BOT_TOKEN}",
+      // pairing = unknown senders get a one-time code challenge before access
+      dmPolicy: "pairing",
+      healthMonitor: { enabled: true },
+    },
+  },
+
+  session: {
+    dmScope: "per-peer",
+    reset: {
+      // Clear context daily at 4am to avoid runaway token spend
+      mode: "daily",
+      atHour: 4,
+      idleMinutes: 240,
+    },
+  },
+
+  tools: {
+    // "full" profile: browser, search, read, exec — all tools available
+    profile: "full",
+    exec: {
+      security: "full",
+      ask: "always", // always prompt before running shell commands
+    },
+  },
+
+  // Inject secrets into agent subprocess environment
+  env: {
+    vars: {
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY}",
+      // Google OAuth credentials — enables Drive, Calendar, Gmail tools
+      GOOGLE_OAUTH_CLIENT_SECRET_FILE: "${GOOGLE_OAUTH_CLIENT_SECRET_FILE}",
+      GOOGLE_OAUTH_TOKEN_FILE: "${GOOGLE_OAUTH_TOKEN_FILE}",
+    },
+  },
+}
