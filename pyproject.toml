@@ -1,0 +1,12 @@
+[project]
+name = "donna-bot"
+version = "0.1.0"
+description = "Donna — personal AI assistant scripts and tooling"
+requires-python = ">=3.11"
+dependencies = [
+    "google-auth-oauthlib>=1.2",
+    "google-auth-httplib2>=0.2",
+]
+
+[dependency-groups]
+dev = []

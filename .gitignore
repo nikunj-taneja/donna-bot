@@ -2,3 +2,4 @@
 *.env.local
 google_oauth_client_secret.json
 google_oauth_token.json
+.venv/
