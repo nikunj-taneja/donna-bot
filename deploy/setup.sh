@@ -61,6 +61,14 @@ echo "==> Creating user: $DONNA_USER"
 id -u "$DONNA_USER" &>/dev/null || useradd -r -m -d "$DONNA_HOME" -s /bin/bash "$DONNA_USER"
 usermod -aG docker "$DONNA_USER"
 
+# ── donna-ctl (gateway control socket) ───────────────────────────────────────
+echo "==> Installing donna-ctl"
+install -o root -g root -m 755 "$REPO_DIR/deploy/donna-ctl-server" /usr/local/bin/donna-ctl-server
+install -o root -g root -m 755 "$REPO_DIR/deploy/donna-ctl"        /usr/local/bin/donna-ctl
+install -o root -g root -m 644 "$REPO_DIR/deploy/donna-ctl.service" /etc/systemd/system/donna-ctl.service
+systemctl daemon-reload
+systemctl enable donna-ctl
+
 # ── OpenClaw ──────────────────────────────────────────────────────────────────
 echo "==> Installing OpenClaw"
 npm install -g openclaw@latest
@@ -123,7 +131,8 @@ systemctl enable donna
 
 if [[ -f "$DONNA_HOME/.env" ]]; then
   systemctl start donna
+  systemctl start donna-ctl
   echo "==> Donna is running. Check: systemctl status donna"
 else
-  echo "==> Setup complete. Add secrets to $DONNA_HOME/.env, then: systemctl start donna"
+  echo "==> Setup complete. Add secrets to $DONNA_HOME/.env, then: systemctl start donna donna-ctl"
 fi

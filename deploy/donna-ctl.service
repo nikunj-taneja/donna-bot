@@ -1,0 +1,14 @@
+[Unit]
+Description=Donna gateway control socket server
+After=donna.service
+Requires=donna.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/donna-ctl-server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

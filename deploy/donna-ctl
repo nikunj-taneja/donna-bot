@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""
+Client for donna-ctl-server. Runs inside sandbox containers.
+Usage: donna-ctl {reload|restart|status}
+"""
+import socket
+import sys
+
+SOCKET_PATH = "/run/donna-ctl.sock"
+ALLOWED = ("reload", "restart", "status")
+
+cmd = sys.argv[1] if len(sys.argv) == 2 else ""
+if cmd not in ALLOWED:
+    print(f"Usage: donna-ctl {{{'|'.join(ALLOWED)}}}", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.connect(SOCKET_PATH)
+        s.sendall(cmd.encode())
+        s.shutdown(socket.SHUT_WR)
+        print(s.recv(4096).decode(), end="")
+except FileNotFoundError:
+    print("error: donna-ctl socket not found — is donna-ctl-server running on the host?", file=sys.stderr)
+    sys.exit(1)
