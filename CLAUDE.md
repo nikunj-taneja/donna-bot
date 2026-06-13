@@ -48,8 +48,10 @@ After setup, the service runs as the `donna` system user. Logs: `journalctl -u d
 The VPS reads config and workspace files directly from the git checkout at `/opt/donna-bot`. Push your changes, then:
 
 ```bash
-ssh donna "cd /opt/donna-bot && git pull && systemctl restart donna"
+ssh donna "cd /opt/donna-bot && git pull && chown -R donna:donna workspace/ config/ && systemctl restart donna"
 ```
+
+openclaw needs write access to `workspace/` (generates `TOOLS.md` there) and `config/` (last-known-good config backup). Those dirs must stay `donna`-owned — the `chown` above re-applies that after every pull since git runs as root.
 
 ## Key architecture decisions
 
