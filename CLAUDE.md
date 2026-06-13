@@ -48,7 +48,7 @@ After setup, the service runs as the `donna` system user. Logs: `journalctl -u d
 The VPS reads config and workspace files directly from the git checkout at `/opt/donna-bot`. Push your changes, then:
 
 ```bash
-ssh donna "cd /opt/donna-bot && git pull && systemctl reload donna || systemctl restart donna"
+ssh donna "cd /opt/donna-bot && git pull && systemctl restart donna"
 ```
 
 ## Key architecture decisions
