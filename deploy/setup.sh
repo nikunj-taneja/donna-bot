@@ -70,10 +70,12 @@ echo "==> Installing Google Workspace CLI (gws)"
 npm install -g @googleworkspace/cli
 
 # ── Repo permissions ──────────────────────────────────────────────────────────
-# donna user (running the service) must be able to read repo files.
-# .env stays private (600); .openclaw/ and .config/ are donna-owned already.
+# Repo is root-owned (git pull runs as root). Make files world-readable so the
+# donna service user can read them. Give donna write access to dirs openclaw
+# needs to write into (workspace for TOOLS.md, config for last-good backup).
 chmod -R a+rX "$REPO_DIR"
 chmod 600 "$REPO_DIR/.env" 2>/dev/null || true
+chown donna:donna "$REPO_DIR/workspace" "$REPO_DIR/config"
 
 # ── OpenClaw state dir + gws skills ───────────────────────────────────────────
 echo "==> Preparing OpenClaw state dir"

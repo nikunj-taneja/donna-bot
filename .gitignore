@@ -7,3 +7,5 @@ deploy/vps.sh
 # Runtime state written by OpenClaw and gws on the VPS
 .openclaw/
 .config/
+config/*.last-good
+config/plugin-skills/
