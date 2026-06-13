@@ -12,11 +12,30 @@
     reload: { mode: "hybrid" },
   },
 
+  models: {
+    providers: {
+      local: {
+        baseUrl: "http://localhost:11434/v1",
+        apiKey: "ollama",
+        api: "openai-completions",
+        models: [{
+          id: "qwen2.5:3b",
+          name: "Qwen 2.5 3B (local)",
+          contextWindow: 32768,
+          maxTokens: 8192,
+          input: ["text"],
+          compat: { supportsDeveloperRole: false },
+        }],
+      },
+    },
+  },
+
   agents: {
     defaults: {
       workspace: "/opt/donna-bot/workspace",
       model: {
-        primary: "google/gemini-3.1-flash-lite",
+        primary: "local/qwen2.5:3b",
+        fallbacks: ["google/gemini-3.1-flash-lite"],
       },
       sandbox: {
         mode: "non-main",
