@@ -63,16 +63,7 @@ openclaw needs write access to `workspace/` (generates `TOOLS.md` there) and `co
 
 ## Google Workspace (Gmail, Calendar, Drive)
 
-`gws` (Google's own Workspace CLI) runs as an MCP stdio server inside the gateway. After deploying:
-
-```bash
-# Authenticate once as the donna user (file keyring — no daemon needed on VPS)
-sudo -u donna GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file gws auth login
-# Opens a URL — paste into your browser, grant access, paste the code back
-```
-
-Tokens are stored at `/opt/donna-bot/.config/gws/` and refresh automatically.
-The gws agent skills are symlinked into `/opt/donna-bot/.openclaw/skills/gws/` by `setup.sh`.
+Not currently configured — to be set up from scratch.
 
 ## Secrets needed
 

@@ -74,21 +74,6 @@
     },
   },
 
-  // Google Workspace via gws MCP server (gmail, calendar, drive, docs, sheets…)
-  // Auth: run `sudo -u donna GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file gws auth login` once on VPS
-  mcp: {
-    servers: {
-      google: {
-        command: "gws",
-        args: ["mcp"],
-        env: {
-          // Use file-based keyring — no keyring daemon available on VPS
-          GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND: "file",
-        },
-      },
-    },
-  },
-
   // Inject secrets into agent subprocess environment
   env: {
     vars: {
