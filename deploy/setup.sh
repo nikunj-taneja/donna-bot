@@ -5,8 +5,8 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 DONNA_USER="donna"
-DONNA_HOME="/opt/donna"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DONNA_HOME="$REPO_DIR"  # repo IS the home — no separate /opt/donna dir
 
 echo "==> System update"
 apt-get update -qq && apt-get upgrade -y -qq
@@ -61,32 +61,28 @@ echo "==> Creating user: $DONNA_USER"
 id -u "$DONNA_USER" &>/dev/null || useradd -r -m -d "$DONNA_HOME" -s /bin/bash "$DONNA_USER"
 usermod -aG docker "$DONNA_USER"
 
-# ── donna-ctl (gateway control socket) ───────────────────────────────────────
-echo "==> Installing donna-ctl"
-install -o root -g root -m 755 "$REPO_DIR/deploy/donna-ctl-server" /usr/local/bin/donna-ctl-server
-install -o root -g root -m 755 "$REPO_DIR/deploy/donna-ctl"        /usr/local/bin/donna-ctl
-install -o root -g root -m 644 "$REPO_DIR/deploy/donna-ctl.service" /etc/systemd/system/donna-ctl.service
-systemctl daemon-reload
-systemctl enable donna-ctl
-
 # ── OpenClaw ──────────────────────────────────────────────────────────────────
 echo "==> Installing OpenClaw"
 npm install -g openclaw@latest
 
-# ── Config and workspace ──────────────────────────────────────────────────────
-echo "==> Deploying config and workspace"
+# ── Google Workspace CLI ──────────────────────────────────────────────────────
+echo "==> Installing Google Workspace CLI (gws)"
+npm install -g @googleworkspace/cli
+
+# ── OpenClaw state dir + gws skills ───────────────────────────────────────────
+echo "==> Preparing OpenClaw state dir"
 install -d -o "$DONNA_USER" -g "$DONNA_USER" -m 700 "$DONNA_HOME/.openclaw"
-install -d -o "$DONNA_USER" -g "$DONNA_USER" -m 755 "$DONNA_HOME/workspace"
 
-# Copy config (symlink not recommended by OpenClaw docs)
-install -o "$DONNA_USER" -g "$DONNA_USER" -m 600 \
-  "$REPO_DIR/config/openclaw.json5" "$DONNA_HOME/.openclaw/openclaw.json5"
+# Config and workspace live in the git repo at $REPO_DIR — no copies needed.
+# Updates: git pull /opt/donna-bot && systemctl reload donna
 
-# Copy workspace files (SOUL.md, AGENTS.md)
-install -o "$DONNA_USER" -g "$DONNA_USER" -m 644 \
-  "$REPO_DIR/workspace/SOUL.md" "$DONNA_HOME/workspace/SOUL.md"
-install -o "$DONNA_USER" -g "$DONNA_USER" -m 644 \
-  "$REPO_DIR/workspace/AGENTS.md" "$DONNA_HOME/workspace/AGENTS.md"
+# Symlink gws agent skills so Donna knows how to use Google Workspace tools
+GWS_SKILLS_DIR="$(npm root -g)/@googleworkspace/cli/skills"
+install -d -o "$DONNA_USER" -g "$DONNA_USER" -m 755 "$DONNA_HOME/.openclaw/skills"
+if [[ -d "$GWS_SKILLS_DIR" ]]; then
+  ln -sfn "$GWS_SKILLS_DIR" "$DONNA_HOME/.openclaw/skills/gws"
+  chown -h "$DONNA_USER:$DONNA_USER" "$DONNA_HOME/.openclaw/skills/gws"
+fi
 
 # ── Secrets ───────────────────────────────────────────────────────────────────
 if [[ ! -f "$DONNA_HOME/.env" ]]; then
@@ -113,7 +109,7 @@ User=$DONNA_USER
 Group=$DONNA_USER
 WorkingDirectory=$DONNA_HOME
 EnvironmentFile=$DONNA_HOME/.env
-Environment=OPENCLAW_CONFIG_PATH=$DONNA_HOME/.openclaw/openclaw.json5
+Environment=OPENCLAW_CONFIG_PATH=$REPO_DIR/config/openclaw.json5
 Environment=OPENCLAW_HOME=$DONNA_HOME
 ExecStart=$OPENCLAW_BIN gateway start
 Restart=on-failure
@@ -131,8 +127,13 @@ systemctl enable donna
 
 if [[ -f "$DONNA_HOME/.env" ]]; then
   systemctl start donna
-  systemctl start donna-ctl
   echo "==> Donna is running. Check: systemctl status donna"
 else
-  echo "==> Setup complete. Add secrets to $DONNA_HOME/.env, then: systemctl start donna donna-ctl"
+  echo "==> Setup complete. Add secrets to $DONNA_HOME/.env, then: systemctl start donna"
 fi
+
+echo ""
+echo "  >> Authenticate Google Workspace (run once as the donna user):"
+echo "     sudo -u $DONNA_USER GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file gws auth login"
+echo "     (opens a URL — paste into your browser, then paste the code back)"
+echo ""

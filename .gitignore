@@ -3,3 +3,7 @@
 google_oauth_client_secret.json
 google_oauth_token.json
 .venv/
+deploy/vps.sh
+# Runtime state written by OpenClaw and gws on the VPS
+.openclaw/
+.config/

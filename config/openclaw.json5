@@ -14,7 +14,7 @@
 
   agents: {
     defaults: {
-      workspace: "/opt/donna/workspace",
+      workspace: "/opt/donna-bot/workspace",
       model: {
         primary: "google/gemini-3.1-flash-lite",
       },
@@ -22,13 +22,6 @@
         mode: "non-main",
         scope: "session",
         workspaceAccess: "ro",
-        docker: {
-          // Expose donna-ctl so Donna can reload/restart/status her own service
-          binds: [
-            "/run/donna-ctl.sock:/run/donna-ctl.sock",
-            "/usr/local/bin/donna-ctl:/usr/local/bin/donna-ctl:ro",
-          ],
-        },
       },
     },
   },
@@ -62,13 +55,25 @@
     },
   },
 
+  // Google Workspace via gws MCP server (gmail, calendar, drive, docs, sheets…)
+  // Auth: run `sudo -u donna GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND=file gws auth login` once on VPS
+  mcp: {
+    servers: {
+      google: {
+        command: "gws",
+        args: ["mcp"],
+        env: {
+          // Use file-based keyring — no keyring daemon available on VPS
+          GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND: "file",
+        },
+      },
+    },
+  },
+
   // Inject secrets into agent subprocess environment
   env: {
     vars: {
       GOOGLE_API_KEY: "${GOOGLE_API_KEY}",
-      // Google OAuth credentials — enables Drive, Calendar, Gmail tools
-      GOOGLE_OAUTH_CLIENT_SECRET_FILE: "${GOOGLE_OAUTH_CLIENT_SECRET_FILE}",
-      GOOGLE_OAUTH_TOKEN_FILE: "${GOOGLE_OAUTH_TOKEN_FILE}",
     },
   },
 }
